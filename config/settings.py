@@ -1,10 +1,15 @@
 #APLLICATION CONFIGURATION
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 #1] LLM CONFIG
 MODEL_NAME = "llama-3.3-70b-versatile"
 TEMPERATURE = 0
 MAX_SUMMARY_WORDS = 300
-
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 #2] APPLICATION (STREAMLIT)
 APP_TITLE = "AI CONTENT SUMMARIZER"
