@@ -3,17 +3,42 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from config.prompts import SUMMARY_PROMPT
-from config.settings import (CHUNK_OVERLAP,CHUNK_SIZE)
+from config.settings import CHUNK_OVERLAP, CHUNK_SIZE
 
 from utils.helpers import clean_text
+
 
 class SummarizerService:
 
     @staticmethod
-    def summarize(documents,llm) -> str:
-        content = "\n".join(doc.page_content for doc in documents)
+    def generate_summary(content: str, llm) -> str:
+
+        prompt = PromptTemplate.from_template(
+            SUMMARY_PROMPT
+        )
+
+        chain = (
+            prompt
+            | llm
+            | StrOutputParser()
+        )
+
+        return chain.invoke(
+            {
+                "content": content
+            }
+        )
+
+    @staticmethod
+    def summarize(documents, llm) -> str:
+
+        content = "\n".join(
+            doc.page_content
+            for doc in documents
+        )
 
         content = clean_text(content)
+
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=CHUNK_SIZE,
             chunk_overlap=CHUNK_OVERLAP
@@ -21,32 +46,34 @@ class SummarizerService:
 
         chunks = splitter.split_text(content)
 
-        
-
-        prompt = PromptTemplate.from_template(SUMMARY_PROMPT)
-
-        chain = (
-            prompt | llm | StrOutputParser()
-        )
-
-        chunk_summaries = []
-        for chunk in chunks:
-            chunk_summary = chain.invoke(
-                {
-                    "content":chunk
-                }
+        # Small documents
+        if len(chunks) == 1:
+            return SummarizerService.generate_summary(
+                chunks[0],
+                llm
             )
-            chunk_summaries.append(chunk_summary)
 
+        # Large documents
+        chunk_summaries = []
+
+        for chunk in chunks:
+
+            chunk_summary = (
+                SummarizerService.generate_summary(
+                    chunk,
+                    llm
+                )
+            )
+
+            chunk_summaries.append(
+                chunk_summary
+            )
 
         combined_summary = "\n".join(
-        chunk_summaries
-        )    
-
-        final_summary = chain.invoke(
-            {
-                "content": combined_summary
-            }
+            chunk_summaries
         )
 
-        return final_summary
+        return SummarizerService.generate_summary(
+            combined_summary,
+            llm
+        )
