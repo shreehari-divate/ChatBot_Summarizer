@@ -4,6 +4,7 @@ import streamlit as st
 from config.settings import APP_TITLE, APP_ICON
 from utils.validators import validate_url
 from utils.logger import logger
+from utils.helpers import count_tokens
 
 from services.llm_services import get_llm
 from services.load_services import LoaderService
@@ -113,6 +114,7 @@ if summarize_btn:
             summary = cached_data["summary"]
             documents_count = cached_data["documents_count"]
             total_chars = cached_data["total_chars"]
+            token_count = cached_data["token_count"]
 
             st.success("Summary loaded from cache.")
 
@@ -161,6 +163,14 @@ if summarize_btn:
                 len(doc.page_content)
                 for doc in documents
             )
+            content = "\n".join(
+                doc.page_content
+                for doc in documents
+            )
+            token_count = count_tokens(content)
+            logger.info(
+                f"Token Count: {token_count}"
+            )
 
             # --------------------------
             # SAVE TO CACHE
@@ -169,7 +179,8 @@ if summarize_btn:
             st.session_state.url_cache[url] = {
                 "summary": summary,
                 "documents_count": documents_count,
-                "total_chars": total_chars
+                "total_chars": total_chars,
+                "token_count": token_count
             }
 
         processing_time = round(
@@ -206,6 +217,8 @@ if summarize_btn:
 
             Characters Processed: {total_chars}
 
+            Tokens: {token_count}
+
             Processing Time: {processing_time} sec
             """
         )
@@ -220,6 +233,9 @@ if summarize_btn:
             file_name="summary.txt",
             mime="text/plain"
         )
+
+       
+        # st.write(f"Characters: {total_chars}")
 
     except Exception as e:
 

@@ -1,3 +1,4 @@
+import tiktoken
 
 
 def clean_text(text:str) -> str:
@@ -12,3 +13,16 @@ def clean_text(text:str) -> str:
     )
 
     return "\n".join(unique)
+
+
+
+def count_tokens(text: str) -> int:
+    """
+    Count tokens using tiktoken.
+    """
+
+    encoding = tiktoken.get_encoding(
+        "cl100k_base"
+    )
+
+    return len(encoding.encode(text))

@@ -17,3 +17,5 @@ python-dotenv>=1.1
 pytest>=8.0
 
 langchain-text-splitters>=1.0
+
+tiktoken>=0.9
